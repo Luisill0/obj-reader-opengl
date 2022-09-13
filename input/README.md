@@ -1,1 +1,3 @@
-# OBJ models go here
+## OBJ models go here
+
+.mtl files not supported... yet
