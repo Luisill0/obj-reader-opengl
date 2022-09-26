@@ -22,7 +22,7 @@ class Vertex{
             this->z = z;
         }
 
-        Vertex();
+        Vertex(){}
 
         void print(){
             cout << "x: " << this->x 
@@ -48,7 +48,7 @@ class Face{
             this->nVertices = this->vertexIndices.size();
         }
 
-        Face();
+        Face(){}
 
         void print(){
             for(int i = 0; i < vertexIndices.size(); i++){
@@ -89,33 +89,50 @@ class Model{
         }
         Model(){}
 
-        void print(){
+        void printVertices(){
             for(int v = 0; v < vertices.size(); v++){
                 cout << "Vertex " << v << ":" << endl;
                 vertices[v].print();
             }
+        }
 
+        void printFaces(){
             for(int f = 0; f < faces.size(); f++){
                 cout << "Face " << f << ":" << endl;
                 faces[f].print();
             }
         }
 
+        void print(){
+            this->printVertices();
+            this->printFaces();
+        }
+
         void drawVertices(float pointSize){
-            Vertex currVer;
+            Vertex currVert;
             glPointSize(pointSize);
             for(int i = 0; i < this->vertices.size(); i++){
-                currVer = this->vertices[i];
+                currVert = this->vertices[i];
                 glBegin(GL_POINTS);
-                glVertex3f(currVer.x,currVer.y,currVer.z);
-                glEnd();
+                glVertex3f(currVert.x, currVert.y, currVert.z);
+            glEnd();    
             }
         }
 
         void drawFaces(){
             Face currFace;
+            Vertex currVert;
+            Vertex currNormalVert;
             for(int i = 0; i < this->faces.size(); i++){
-                
+                currFace = this->faces[i];
+                currNormalVert = this->verticesNormals[currFace.vertexNormalIndices[i]-1];
+                glBegin(GL_TRIANGLES);
+                    //glNormal3f(currNormalVert.x, currNormalVert.y, currNormalVert.z);
+                    for(int f = 0; f < currFace.vertexIndices.size(); f++){
+                        currVert = this->vertices[currFace.vertexIndices[f] - 1];
+                        glVertex3f(currVert.x, currVert.y, currVert.z);    
+                    }
+                glEnd();    
             }
         }
 };

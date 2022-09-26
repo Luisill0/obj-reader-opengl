@@ -2,9 +2,8 @@
 
 void camera(void){
 	glRotatef(15,1.0,0.0,0.0);  
-    glRotatef(-20,0.0,1.0,0.0);
-    glRotatef(15,0.0,1.0,0.0); 
-    glTranslated(-2,-5,-10); 
+    glRotatef(20,0.0,1.0,0.0);
+    glTranslated(2,-0.2,-5); 
 }
 
 void enable(void){
@@ -17,5 +16,4 @@ void reshape (int w, int h) {
     glLoadIdentity ();
     gluPerspective (60, (GLfloat)w / (GLfloat)h, 1.0, 2000.0); 
     glMatrixMode (GL_MODELVIEW);
-    
 }

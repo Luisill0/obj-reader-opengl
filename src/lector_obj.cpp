@@ -7,7 +7,7 @@
 
 using namespace std;
 
-string path = "input/cube.obj";
+string path = "./input/monkey.obj";
 ObjReader reader;
 Model model;
 
@@ -44,7 +44,6 @@ void display (void) {
     model.drawVertices(2.0);
 
     glColor3f(0.24, .75, .40);
-    
     //draw model faces
     model.drawFaces();
 
