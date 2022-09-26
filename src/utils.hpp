@@ -1,19 +1,21 @@
 #include <GL/freeglut.h> 
 
-void __setLightRes(){
-	GLfloat position[] = {0.0f, 0.0f, 1.0f, 0.0f};
-	glLightfv(GL_LIGHT0, GL_POSITION, position);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+void camera(void){
+	glRotatef(15,1.0,0.0,0.0);  
+    glRotatef(-20,0.0,1.0,0.0);
+    glRotatef(15,0.0,1.0,0.0); 
+    glTranslated(-2,-5,-10); 
 }
 
-void initWindow(const char* window_name){
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(800, 600);
-	glutCreateWindow(window_name);
-	glEnable(GL_DEPTH_TEST);
-	glShadeModel(GL_SMOOTH);
-	__setLightRes();
-	glEnable(GL_DEPTH_TEST);
+void enable(void){
+    glEnable (GL_DEPTH_TEST); 
 }
 
+void reshape (int w, int h) {
+    glViewport (0, 0, (GLsizei)w, (GLsizei)h); 
+    glMatrixMode (GL_PROJECTION); 
+    glLoadIdentity ();
+    gluPerspective (60, (GLfloat)w / (GLfloat)h, 1.0, 2000.0); 
+    glMatrixMode (GL_MODELVIEW);
+    
+}

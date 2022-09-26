@@ -21,6 +21,15 @@ class Vertex{
             this->y = y;
             this->z = z;
         }
+
+        Vertex();
+
+        void print(){
+            cout << "x: " << this->x 
+                 << " y: " << this->y
+                 << " z: " << this->z 
+                 << endl;
+        }
 };
 
 class Face{
@@ -38,6 +47,31 @@ class Face{
             this->indices = indices;
             this->nVertices = this->vertexIndices.size();
         }
+
+        Face();
+
+        void print(){
+            for(int i = 0; i < vertexIndices.size(); i++){
+                cout << indices[i] << " ";
+            }
+            cout << endl;
+        }
+
+        void printIndices(){
+            cout << "Indices: " << endl << "{ ";
+            for(int i = 0; i < vertexIndices.size(); i++){
+                cout << vertexIndices[i] << ", ";
+            }
+            cout << "}" << endl;
+        }
+
+        void printNormalIndices(){
+            cout << "Normals: " << endl << "{ ";
+            for(int i = 0; i < vertexNormalIndices.size(); i++){
+                cout << vertexNormalIndices[i] << ", ";
+            }
+            cout << "}" << endl;
+        }
 };
 
 class Model{
@@ -54,6 +88,36 @@ class Model{
             this->faces = faces;
         }
         Model(){}
+
+        void print(){
+            for(int v = 0; v < vertices.size(); v++){
+                cout << "Vertex " << v << ":" << endl;
+                vertices[v].print();
+            }
+
+            for(int f = 0; f < faces.size(); f++){
+                cout << "Face " << f << ":" << endl;
+                faces[f].print();
+            }
+        }
+
+        void drawVertices(float pointSize){
+            Vertex currVer;
+            glPointSize(pointSize);
+            for(int i = 0; i < this->vertices.size(); i++){
+                currVer = this->vertices[i];
+                glBegin(GL_POINTS);
+                glVertex3f(currVer.x,currVer.y,currVer.z);
+                glEnd();
+            }
+        }
+
+        void drawFaces(){
+            Face currFace;
+            for(int i = 0; i < this->faces.size(); i++){
+                
+            }
+        }
 };
 
 class ObjReader{
