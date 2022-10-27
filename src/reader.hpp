@@ -1,7 +1,7 @@
-#include <GL/freeglut.h> 
+#include <GL/freeglut.h>
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <math.h>
@@ -21,7 +21,6 @@ class Vertex{
             this->y = y;
             this->z = z;
         }
-
         Vertex(){}
 
         void print(){
@@ -47,7 +46,6 @@ class Face{
             this->indices = indices;
             this->nVertices = this->vertexIndices.size();
         }
-
         Face(){}
 
         void print(){
@@ -99,47 +97,19 @@ class Model{
         void printFaces(){
             for(int f = 0; f < faces.size(); f++){
                 cout << "Face " << f << ":" << endl;
-                faces[f].print();
+                faces[f].printIndices();
             }
         }
 
         void print(){
-            this->printVertices();
-            this->printFaces();
-        }
-
-        void drawVertices(float pointSize){
-            Vertex currVert;
-            glPointSize(pointSize);
-            for(int i = 0; i < this->vertices.size(); i++){
-                currVert = this->vertices[i];
-                glBegin(GL_POINTS);
-                glVertex3f(currVert.x, currVert.y, currVert.z);
-            glEnd();    
-            }
-        }
-
-        void drawFaces(){
-            Face currFace;
-            Vertex currVert;
-            Vertex currNormalVert;
-            for(int i = 0; i < this->faces.size(); i++){
-                currFace = this->faces[i];
-                currNormalVert = this->verticesNormals[currFace.vertexNormalIndices[i]-1];
-                glBegin(GL_TRIANGLES);
-                    //glNormal3f(currNormalVert.x, currNormalVert.y, currNormalVert.z);
-                    for(int f = 0; f < currFace.vertexIndices.size(); f++){
-                        currVert = this->vertices[currFace.vertexIndices[f] - 1];
-                        glVertex3f(currVert.x, currVert.y, currVert.z);    
-                    }
-                glEnd();    
-            }
+            //this->printVertices();
+            //this->printFaces();
         }
 };
 
 class ObjReader{
     public:
-            Model readModel(string filename){
+        Model readModel(string filename){
             vector<Vertex> vertices;
             vector<Vertex> verticesNormals;
             vector<Face> faces;
@@ -161,7 +131,7 @@ class ObjReader{
                         coords.push_back(stof(num));
                     }
                     Vertex vertex = Vertex(coords[0], coords[1], coords[2]);
-                    if(line.substr(0, 1) == "v"){
+                    if(line.substr(0, 2) != "vn"){
                         vertices.push_back(vertex);
                     }
                     else{
@@ -178,7 +148,8 @@ class ObjReader{
                     string allIndices;
                     for(int i = 0; getline(stream, allIndices, ' '); i++){
                         indices.push_back(allIndices);
-                        vertexIndices.push_back(stoi(allIndices.substr(0,1)));
+                        char* indicesC = const_cast<char *>(allIndices.c_str());
+                        vertexIndices.push_back(stoi(strtok(indicesC, "/")));
                         vertexNormalIndices.push_back((int)allIndices.back() - '0');
                     }
                     Face face = Face(vertexIndices, vertexNormalIndices, indices);
