@@ -1,4 +1,4 @@
-#include <GL/freeglut.h>
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -6,106 +6,9 @@
 #include <vector>
 #include <math.h>
 
+#include "model.hpp"
+
 using namespace std;
-
-class Vertex{
-    public:
-        //Attributes
-        GLfloat x;
-        GLfloat y;
-        GLfloat z;
-        
-        //Constructor
-        Vertex(GLfloat x, GLfloat y, GLfloat z){
-            this->x = x;
-            this->y = y;
-            this->z = z;
-        }
-        Vertex(){}
-
-        void print(){
-            cout << "x: " << this->x 
-                 << " y: " << this->y
-                 << " z: " << this->z 
-                 << endl;
-        }
-};
-
-class Face{
-    public:
-        //Attributes
-        vector<int> vertexIndices;
-        vector<int> vertexNormalIndices;
-        vector<string> indices;
-        int nVertices;
-        
-        //Constructor
-        Face(vector<int> vertexIndices, vector<int> vertexNormalIndices, vector<string> indices){
-            this->vertexIndices = vertexIndices;
-            this->vertexNormalIndices = vertexNormalIndices;
-            this->indices = indices;
-            this->nVertices = this->vertexIndices.size();
-        }
-        Face(){}
-
-        void print(){
-            for(int i = 0; i < vertexIndices.size(); i++){
-                cout << indices[i] << " ";
-            }
-            cout << endl;
-        }
-
-        void printIndices(){
-            cout << "Indices: " << endl << "{ ";
-            for(int i = 0; i < vertexIndices.size(); i++){
-                cout << vertexIndices[i] << ", ";
-            }
-            cout << "}" << endl;
-        }
-
-        void printNormalIndices(){
-            cout << "Normals: " << endl << "{ ";
-            for(int i = 0; i < vertexNormalIndices.size(); i++){
-                cout << vertexNormalIndices[i] << ", ";
-            }
-            cout << "}" << endl;
-        }
-};
-
-class Model{
-    public:
-        //Attributes
-        vector<Vertex> vertices;
-        vector<Vertex> verticesNormals;
-        vector<Face> faces;
-
-        //Constructor
-        Model(vector<Vertex> vertices, vector<Vertex> verticesNormals, vector<Face> faces){
-            this->vertices = vertices;
-            this->verticesNormals = verticesNormals;
-            this->faces = faces;
-        }
-        Model(){}
-
-        void printVertices(){
-            for(int v = 0; v < vertices.size(); v++){
-                cout << "Vertex " << v << ":" << endl;
-                vertices[v].print();
-            }
-        }
-
-        void printFaces(){
-            for(int f = 0; f < faces.size(); f++){
-                cout << "Face " << f << ":" << endl;
-                faces[f].printIndices();
-            }
-        }
-
-        void print(){
-            //this->printVertices();
-            //this->printFaces();
-        }
-};
 
 class ObjReader{
     public:
@@ -130,7 +33,7 @@ class ObjReader{
                         stream >> num;
                         coords.push_back(stof(num));
                     }
-                    Vertex vertex = Vertex(coords[0], coords[1], coords[2]);
+                    Vertex vertex = Vertex(coords[0], coords[1], coords[2], 1.0);
                     if(line.substr(0, 2) != "vn"){
                         vertices.push_back(vertex);
                     }
@@ -157,6 +60,6 @@ class ObjReader{
                 }
             }
             file.close();
-            return Model(vertices, verticesNormals, faces);
+            return *(new Model(vertices, verticesNormals, faces));
         }
 };
