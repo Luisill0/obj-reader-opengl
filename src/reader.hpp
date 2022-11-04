@@ -12,7 +12,7 @@ using namespace std;
 
 class ObjReader{
     public:
-        Model readModel(string filename){
+        Model* readModel(string filename){
             vector<Vertex> vertices;
             vector<Vertex> verticesNormals;
             vector<Face> faces;
@@ -60,6 +60,6 @@ class ObjReader{
                 }
             }
             file.close();
-            return *(new Model(vertices, verticesNormals, faces));
+            return new Model(vertices, verticesNormals, faces);
         }
 };

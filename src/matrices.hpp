@@ -19,11 +19,11 @@ class TranslationMatrix {
             (this->matrix)[2][3] = z;
         }
 
-        Model transformObject(Model model){
-            for(Vertex v : model.vertices){
+        Model* transformObject(Model* model){
+            for(Vertex v : model->vertices){
                 vertices.push_back(transformVertex(v));
             }
-            model.vertices = vertices;
+            model->vertices = vertices;
             vertices.clear();
             return model;
         }

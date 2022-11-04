@@ -7,6 +7,7 @@
 
 #include "matrices.hpp"
 #include "reader.hpp"
+#include "bezier.hpp"
 #include "model.hpp"
 
 using namespace std;
@@ -18,8 +19,10 @@ ObjReader* reader = new ObjReader();
 
 TranslationMatrix* TMatrix = new TranslationMatrix(0,0,0);
 
-Model bowling_ball; 
-Model bowling_pin;
+Model* bowling_ball; 
+Model* bowling_pin;
+
+BezierCurve* bezier;
 
 random_device rd;
 mt19937 gen(rd());
@@ -31,12 +34,6 @@ void drawModel(Model);
 
 int main(int argc,char** argv)
 {
-    bowling_ball = reader->readModel(bowling_ball_path);
-    bowling_pin = reader->readModel(bowling_pin_path);
-    delete reader;
-    
-    TMatrix->setTranslationMatrix(0.1,0,0);
-
     glutInit(&argc, argv);
     glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH); 
     glutInitWindowSize(600,600);
@@ -48,6 +45,8 @@ int main(int argc,char** argv)
     init();
     
     glutMainLoop();
+    delete bowling_ball;
+    delete bowling_pin;
 	return 0;
 }
 
@@ -58,7 +57,7 @@ void init(void) {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective( 45.0, 600.0/600.0, 0.1, 100.0 );
+    gluPerspective( 45.0, 600.0/600.0, 0.1, 200.0 );
 
     glMatrixMode(GL_MODELVIEW);
     gluLookAt(
@@ -69,13 +68,34 @@ void init(void) {
     
     glTranslated(0.0, 0.0, 0.0);  
     glRotated(35,0,15,0);
+
+    // Import models    
+    bowling_ball = reader->readModel(bowling_ball_path);
+    bowling_pin = reader->readModel(bowling_pin_path);
+    delete reader;
+    
+    // Traslate bowling ball away
+    TMatrix->setTranslationMatrix(-3,0,0);
+    bowling_ball = TMatrix->transformObject(bowling_ball);
+    
+    // Set route for pin
+    vector<Vertex>* bezierPoints = getPointsVector(0,0,1.5,6.75,2.5,-6.5,4,2);
+    bezier = new BezierCurve(*bezierPoints,0.01);
+    delete bezierPoints;
 }
 
 void display (void) {
+    static int counter = 0;
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-    drawModel(bowling_ball);
+    
+    drawModel(*bowling_ball);
+    
+    if(counter >= bezier->maxPoints) exit(0);
+
+    Vertex position = bezier->cubicBezier[counter++];
+    TMatrix->setTranslationMatrix(position.x, position.y, 0);
     bowling_pin = TMatrix->transformObject(bowling_pin);
-    drawModel(bowling_pin);
+    drawModel(*bowling_pin);
     glutSwapBuffers();
     usleep(330000);
 }
@@ -86,8 +106,8 @@ void drawModel(Model model){
     glBegin(GL_TRIANGLES);
         for(int f = 0; f < model.faces.size(); f++){
             currFace = model.faces[f];
-            //glColor3d(dis(gen), dis(gen), dis(gen));
-            glColor3d(.5,.25,.35);
+            glColor3d(dis(gen), dis(gen), dis(gen));
+            //glColor3d(.5,.25,.35);
             for(int v = 0; v < 3; v++){
                 currVert = model.vertices[currFace.vertexIndices[v]];
                 glVertex3f(currVert.x, currVert.y, currVert.z);
