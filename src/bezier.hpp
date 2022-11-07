@@ -11,28 +11,29 @@ class BezierCurve {
     public:
         vector<Vertex> cubicBezier;
         int maxPoints;
-        BezierCurve(vector<Vertex> points, float step){
+        BezierCurve(vector<Vertex>* points, float step){
             for(float t = 0.01; t < 1; t+= step){
                 this->cubicBezier.push_back(this->eqnParametrica(points, t));
             }
-            this->maxPoints = 1.0 / step;
+            this->maxPoints = floor((1.0 / step)) - 1;
         }
 
     private:
-        Vertex eqnParametrica(vector<Vertex> points, float t){
+        Vertex eqnParametrica(vector<Vertex>* points, float t){
             Vertex vertex;
-            float ax = pow((1-t),3) * points[0].x;
-            float bx = 3 * t * pow((1-t),2) * points[1].x;
-            float cx = 3 * pow(t,2) * (1 - t) * points[2].x;
-            float dx = pow(t,3) * points[3].x;
+            float ax = pow((1-t),3) * (*points)[0].x;
+            float bx = 3 * t * pow((1-t),2) * (*points)[1].x;
+            float cx = 3 * pow(t,2) * (1 - t) * (*points)[2].x;
+            float dx = pow(t,3) * (*points)[3].x;
             vertex.x = (ax + bx + cx + dx);
 
-            float ay = pow((1-t),3) * points[0].y;
-            float by = 3 * t * pow((1-t),2) * points[1].y;
-            float cy = 3 * pow(t,2) * (1 - t) * points[2].y;
-            float dy = pow(t,3) * points[3].y;
+            float ay = pow((1-t),3) * (*points)[0].y;
+            float by = 3 * t * pow((1-t),2) * (*points)[1].y;
+            float cy = 3 * pow(t,2) * (1 - t) * (*points)[2].y;
+            float dy = pow(t,3) * (*points)[3].y;
             vertex.y =(ay + by + cy + dy);
             
+            vertex.z = 0;
             return vertex;
         }    
 };

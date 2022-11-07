@@ -11,7 +11,7 @@
 # In turn removing all binaries #
 
 out/
+input/**obj
 tests/
 .vscode/
-*obj
 *mtl

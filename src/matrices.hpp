@@ -1,97 +1,67 @@
 #pragma once
-#include <GL/freeglut.h>
-#include <math.h>
-#include <vector>
+#include "matrices.hpp"
+#include "model.hpp"
 
-#include "reader.hpp"
+typedef GLfloat** MatrixGL;
 
-class TranslationMatrix {
-    public:
-        TranslationMatrix(GLfloat x, GLfloat y, GLfloat z){
-            (this->matrix)[0][3] = x;
-            (this->matrix)[1][3] = y;
-            (this->matrix)[2][3] = z;
+MatrixGL getNewMatrix(){
+    MatrixGL matrix = new GLfloat*[4];
+    for(int i = 0; i < 4; i++) matrix[i] = new GLfloat[4];
+    
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            matrix[i][j] = 0;
         }
+    }
 
-        void setTranslationMatrix(GLfloat x, GLfloat y, GLfloat z){
-            (this->matrix)[0][3] = x;
-            (this->matrix)[1][3] = y;
-            (this->matrix)[2][3] = z;
+    return matrix;
+}
+
+MatrixGL getOnesMatrix(MatrixGL matrix){
+    matrix[0][0] = matrix[1][1] = matrix[2][2] = matrix[3][3] = 1;
+    return matrix;
+}
+
+MatrixGL restoreMatrix(MatrixGL matrix){
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            matrix[i][j] = 0;
         }
+    }
+    matrix = getOnesMatrix(matrix);
+    return matrix;
+}
 
-        Model* transformObject(Model* model){
-            for(Vertex v : model->vertices){
-                vertices.push_back(transformVertex(v));
-            }
-            model->vertices = vertices;
-            vertices.clear();
-            return model;
-        }
+void freeMatrix(MatrixGL matrix){
+    for(int i = 0; i < 4; i++) delete [] matrix[i];
+    delete [] matrix;
+}
 
-    private: 
-        GLfloat matrix[4][4] = 
-        {   {1, 0, 0, 0},
-            {0, 1, 0, 0},
-            {0, 0, 1, 0},
-            {0, 0, 0, 1},
-        };
-        vector<Vertex> vertices = *(new vector<Vertex>()); 
+Vertex* multiplyVertexMatrix(Vertex* vertex, MatrixGL matrix){
+    vertex->x = vertex->x * matrix[0][0] + vertex->y * matrix[0][1] + vertex->z * matrix[0][2] + vertex->w * matrix[0][3];
+    vertex->y = vertex->x * matrix[1][0] + vertex->y * matrix[1][1] + vertex->z * matrix[1][2] + vertex->w * matrix[1][3];
+    vertex->z = vertex->x * matrix[2][0] + vertex->y * matrix[2][1] + vertex->z * matrix[2][2] + vertex->w * matrix[2][3];
+    vertex->w = vertex->x * matrix[3][0] + vertex->y * matrix[3][1] + vertex->z * matrix[3][2] + vertex->w * matrix[3][3];
+    return vertex;
+}
 
-        Vertex transformVertex(Vertex v){
-            v.x = v.x * (this->matrix)[0][0] + v.y * (this->matrix)[0][1] + v.z * (this->matrix)[0][2] + v.w * (this->matrix[0][3]);
-            v.y = v.x * (this->matrix)[1][0] + v.y * (this->matrix)[1][1] + v.z * (this->matrix)[1][2] + v.w * (this->matrix[1][3]);
-            v.z = v.x * (this->matrix)[2][0] + v.y * (this->matrix)[2][1] + v.z * (this->matrix)[2][2] + v.w * (this->matrix[2][3]);
-            v.w = v.x * (this->matrix)[3][0] + v.y * (this->matrix)[3][1] + v.z * (this->matrix)[3][2] + v.w * (this->matrix[3][3]);
-            return v;
-        }
-};
-
-class RotationMatrix {
-    public:
-        void setRotationX(float deg){
-            setOnes();
-            float rads = toRadians(deg);
-            this->matrix[1][1] = cos(rads);
-            this->matrix[1][2] = -sin(rads);
-            this->matrix[2][1] = sin(rads);
-            this->matrix[2][2] = cos(rads);
-        }
-        
-        void setRotationY(float deg){
-            setOnes();
-            float rads = toRadians(deg);
-            this->matrix[0][0] = cos(rads);
-            this->matrix[0][2] = sin(rads);
-            this->matrix[2][0] = -sin(rads);
-            this->matrix[2][2] = cos(rads);
-        }
-
-        void setRotationZ(float deg){
-            setOnes();
-            float rads = toRadians(deg);
-            this->matrix[0][0] = cos(rads);
-            this->matrix[0][1] = -sin(rads);
-            this->matrix[1][0] = sin(rads);
-            this->matrix[1][1] = cos(rads);
-        }
-
-    private:
-        GLfloat matrix[4][4] =
-        {
-            {0,0,0,0},
-            {0,0,0,0},
-            {0,0,0,0},
-            {0,0,0,0}
-        }; 
-        vector<Vertex> vertices = *(new vector<Vertex>());
-
-        void setOnes(){
-            for(int i = 0; i < 4; i++){
-                this->matrix[i][i] = 1;
+MatrixGL multiplyMatrices(MatrixGL m1, MatrixGL m2){
+    MatrixGL result = getNewMatrix();
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            for(int k = 0; k < 4; k++){
+                result[i][j] += m1[i][k] * m2[k][j];
             }
         }
+    }
+    return result;
+}
 
-        float toRadians(float deg){
-            return (deg * M_PI) / 180.0;
+void printMatrix(MatrixGL matrix){
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 4; j++){
+            cout << matrix[i][j] << ", ";
         }
-};
+        cout << endl;
+    }
+}
