@@ -1,4 +1,4 @@
-#include <GL/freeglut.h> 
+#include <GL/freeglut.h>
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h> 
@@ -34,11 +34,20 @@ BezierCurve* bezier;
 Vertex bPosition;
 Vertex* change;
 
+float ambientLight = 0.9;
+Vertex* lightPos;
+Vertex* lightIlum;
+Vertex* lightDir;
+
 int GLloopcounter = 0;
+bool start = false;
 
 void display (void);
 void init (void);
 void drawModel(Model*);
+void mouseCallback(int, int, int, int);
+void keyboardCallback(unsigned char, int, int);
+void reset(void);
 
 int main(int argc,char** argv)
 {
@@ -50,6 +59,8 @@ int main(int argc,char** argv)
     
     glutDisplayFunc(display);
     glutIdleFunc(display);
+    glutMouseFunc(mouseCallback);
+    glutKeyboardFunc(keyboardCallback);
     init();
     
     glutMainLoop();
@@ -62,7 +73,7 @@ int main(int argc,char** argv)
 
 void init(void) {
     glClearColor(0.0, 0.0, 0.0, 0.0);
-    
+
     glEnable(GL_DEPTH_TEST);
 
     glMatrixMode(GL_PROJECTION);
@@ -77,13 +88,21 @@ void init(void) {
     );
     
     glTranslated(0.0, 0.0, 0.0);  
-    glRotated(35,0,15,0);
+    glRotated(0,0,15,0);
 
     // Import models    
     bowling_ball = reader->readModel(bowling_ball_path);
+    bowling_ball->setColor(new RGBColor(1.0, 0.86, 0.87));
     bowling_pin = reader->readModel(bowling_pin_path);
+    bowling_pin->setColor(new RGBColor(0.8, 0.8, 0.6));
     delete reader;
-    
+
+    // Set lights
+    lightPos = new Vertex(0, 3, 0, 1);
+    lightIlum = new Vertex(0, 1, 0, 1);
+    lightDir = subtractVertices(*lightIlum, *lightPos);
+    lightDir->normalize();
+
     // Set scale for bowling ball
     SMatrix->setScalationMatrix(0.5);
 
@@ -114,45 +133,92 @@ void init(void) {
     bezier = new BezierCurve(bezierPoints, 0.005);
 }
 
-void display (void) {
-    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-    
-    bowling_ball = b_ballTMatrix->transformObject(bowling_ball);
-    drawModel(bowling_ball);
-
-    if(GLloopcounter < bezier->maxPoints){
-        // Get the next point in the bezier curve
-        bPosition = bezier->cubicBezier[GLloopcounter++];
-
-        // Get the difference between the next point and the current position (offset)
-        change = bowling_pin->getPosition();
-        change->x = bPosition.x - change->x; 
-        change->y = bPosition.y - change->y;
-        TMatrix-> setTranslationMatrix(change);
-
-        // Set the new model position and translate it using the offset
-        bowling_pin->setPosition(bPosition.x, bPosition.y, bPosition.z); 
-        b_pinTMatrix->setMatrix(TMatrix->getMatrix());  
-        bowling_pin = b_pinTMatrix->transformObject(bowling_pin);   
+void mouseCallback(int button, int state, int x, int y){
+    if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
+        reset();
     }
-    drawModel(bowling_pin);
-    
-    usleep(10000);
-    glutSwapBuffers();
+}
+
+void keyboardCallback(unsigned char key, int x, int y){
+    start = !start;
+}
+
+void display (void) {
+    if(start || GLloopcounter == 0){
+        glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+        
+        bowling_ball = b_ballTMatrix->transformObject(bowling_ball);
+        bowling_ball->calculateNormals();
+        drawModel(bowling_ball);
+
+        if(GLloopcounter < bezier->maxPoints){
+            // Get the next point in the bezier curve
+            bPosition = bezier->cubicBezier[GLloopcounter++];
+
+            // Get the difference between the next point and the current position (offset)
+            change = bowling_pin->getPosition();
+            change->x = bPosition.x - change->x; 
+            change->y = bPosition.y - change->y;
+            TMatrix-> setTranslationMatrix(change);
+
+            // Set the new model position and translate it using the offset
+            bowling_pin->setPosition(bPosition.x, bPosition.y, bPosition.z); 
+            b_pinTMatrix->setMatrix(TMatrix->getMatrix());  
+            bowling_pin = b_pinTMatrix->transformObject(bowling_pin);   
+        }
+        bowling_pin->calculateNormals();
+        drawModel(bowling_pin);
+
+        usleep(10000);
+        glutSwapBuffers();
+    }
 }
 
 void drawModel(Model* model){
     Face currFace;
     Vertex currVert;
+    GLfloat cosAngle, angle;
     int nFaces = model->faces.size();
     glBegin(GL_TRIANGLES);
         for(int f = 0; f < nFaces; f++){
             currFace = model->faces[f];
-            glColor3f(currFace.color->R, currFace.color->G, currFace.color->B);
+            cosAngle = pointProduct(currFace.normal, lightDir);
+            angle = acos(cosAngle) * (180.0 / M_PI);
+            //cout << cosAngle << ":" << angle << endl;
+            glColor3f(  currFace.color->R * ambientLight * cosAngle, 
+                        currFace.color->G * ambientLight * cosAngle, 
+                        currFace.color->B * ambientLight * cosAngle);
             for(int v = 0; v < 3; v++){
                 currVert = model->vertices[currFace.vertexIndices[v]];
                 glVertex3f(currVert.x, currVert.y, currVert.z);
             }
         }
     glEnd();
+ 
+    // Plane
+    glBegin(GL_QUADS);
+        glColor3f(  0.72 * ambientLight,
+                    0.45 * ambientLight,
+                    0 * ambientLight);
+        glVertex3f(-10,-10,0);
+        glVertex3f(-10,-0.2,0);
+        glVertex3f(10,-0.2,0);
+        glVertex3f(10,-10,0);    
+
+        glColor3f(  0.9216 * ambientLight,
+                    1 * ambientLight,
+                    0.9882 * ambientLight);
+        glVertex3f(-10,10,0);
+        glVertex3f(-10,-0.2,0);
+        glVertex3f(10,-0.2,0);
+        glVertex3f(10,10,0);    
+    glEnd();
+}
+
+void reset(){
+    // Set route for pin
+    vector<Vertex>* bezierPoints = getPointsVector(0, 0, 1.5, 6.75, 2.5, -6.5, 4, 2);
+    bezier = new BezierCurve(bezierPoints, 0.005);
+    GLloopcounter = 0;
+    start = false;
 }

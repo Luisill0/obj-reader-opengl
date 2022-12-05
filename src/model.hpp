@@ -19,6 +19,7 @@ class Vertex {
         GLfloat y;
         GLfloat z;
         GLfloat w;
+        GLfloat magnitude;
         
         //Constructor
         Vertex(GLfloat x, GLfloat y, GLfloat z, GLfloat w){
@@ -26,9 +27,19 @@ class Vertex {
             this->y = y;
             this->z = z;
             this->w = w;
+            this->magnitude = sqrt(pow(x,2) + pow(y,2) + pow(z,2));
         }
         Vertex(){}
+
+        void normalize(){
+            this->x /= this->magnitude;
+            this->y /= this->magnitude;
+            this->z /= this->magnitude;
+        }
 };
+
+Vertex* subtractVertices(Vertex, Vertex);
+GLfloat pointProduct(Vertex, Vertex);
 
 class RGBColor {
     public:
@@ -49,7 +60,7 @@ class Face {
     public:
         //Attributes
         vector<int> vertexIndices;
-        vector<int> vertexNormalIndices;
+        Vertex* normal;
         vector<string> indices;
         RGBColor* color;
         
@@ -60,6 +71,10 @@ class Face {
             this->color = new RGBColor(dis(gen),dis(gen),dis(gen));
         }
         Face(){}
+        
+        void setColor(RGBColor* color){
+            this->color = color;
+        }
 };
 
 class Model {
@@ -67,6 +82,7 @@ class Model {
         //Attributes
         vector<Vertex> vertices;
         vector<Face> faces;
+        RGBColor* modelColor;
 
         //Constructor
         Model(vector<Vertex> vertices, vector<Face> faces){
@@ -84,6 +100,47 @@ class Model {
             this->position->y = y;
             this->position->z = z;
         }
+
+        void setColor(RGBColor* color){
+            for(int f = 0; f < this->faces.size(); f++){
+                this->faces[f].setColor(color);
+            }
+        }
+
+        void calculateNormals(){
+            vector<Vertex> currFacesVertices;
+            for(int f = 0; f < this->faces.size(); f++){
+                for(int v = 0; v < 3; v++){
+                    int index = this->faces[f].vertexIndices[v]; 
+                    currFacesVertices.push_back(this->vertices[index]);
+                }
+                
+                Vertex* Va = subtractVertices(currFacesVertices[0], currFacesVertices[1]);
+                Vertex* Vb = subtractVertices(currFacesVertices[2], currFacesVertices[0]);
+                
+                GLfloat Nx = (Va->y * Vb->z) - (Va->z * Vb->y);
+                GLfloat Ny = (Va->z * Vb->x) - (Va->x * Vb->z);
+                GLfloat Nz = (Va->x * Vb->y) - (Va->y * Vb->x);
+
+                Vertex* normal = new Vertex(Nx, Ny, Nz, 1);
+                normal->normalize();
+
+                this->faces[f].normal = normal;
+
+                delete normal;
+                currFacesVertices.clear();
+            }
+        }
     private:
-        Vertex* position;  
+        Vertex* position;
 };
+
+Vertex* subtractVertices(Vertex v1, Vertex v2){
+    GLfloat x = v1.x - v2.x;
+    GLfloat y = v1.y - v2.y;
+    GLfloat z = v1.z - v2.z;
+    return new Vertex(x, y, z, 1);
+}
+GLfloat pointProduct(Vertex* v1, Vertex* v2){
+    return (v1->x * v2->x) + (v1->y * v2->y) + (v1->z * v2->z);
+}
